@@ -16,7 +16,7 @@ class EnergyEq(object):
         self.S = FunctionSpace(self.mesh, "CG", 1)
 
         # Temporal discretization: F-EULER, B-EULER, CRANIC, BDF2
-        self.temp_disc = "BDF2"
+        self.temp_disc = "bdf2"
 
         self.energy_eq_solver_parameters = {
             "mat_type": "aij",
@@ -49,30 +49,26 @@ class EnergyEq(object):
         # ENERGY EQUATION
 
         # FORWARD EULER
-        if self.temp_disc == "F-EULER":
-            #printp0("Temporal Difference: Forward-Euler")
+        if self.temp_disc == "forward_euler":
             F1 = inner((self.T1 - self.T0), s) * dx \
                 + idt / (self.rho * self.cp) \
                 * self._weak_form(self.u, self.T0, s, self.rho, self.cp, self.k)
 
         # BACKWAD EULER
-        elif self.temp_disc == "B-EULER":
-            #printp0("Temporal Difference: Backward-Euler")
+        elif self.temp_disc == "backward_euler":
             F1 = inner((self.T1 - self.T0), s) * dx \
                 + idt / (self.rho * self.cp) \
                 * self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k)
 
         # CRANK NICOLSON
-        elif self.temp_disc == "CRANIC":
-            #printp0("Temporal Difference: Crank-Nicolson")
+        elif self.temp_disc == "crank_nicolson":
             F1 = inner((self.T1 - self.T0), s) * dx \
                 + idt / (self.rho * self.cp) * 0.5 * (
                 self._weak_form(self.u, self.T0, s, self.rho, self.cp, self.k) +
                 self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k))
 
         # BDF2
-        elif self.temp_disc == "BDF2":
-            #printp0("Temporal Difference: BDF2")
+        elif self.temp_disc == "bdf2":
             F1 = inner(1.5 * self.T1 - 2.0 * self.T0 + 0.5 * self.T_1, s) * dx \
                 + idt / (self.rho * self.cp) \
                 * self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k)
