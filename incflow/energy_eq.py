@@ -15,15 +15,11 @@ class EnergyEq(object):
         self.cp = 1.005
         self.S = FunctionSpace(self.mesh, "CG", 1)
 
-        # Temporal discretization: F-EULER, B-EULER, CRANIC, BDF2
-        self.temp_disc = "bdf2"
-
         self.energy_eq_solver_parameters = {
             "mat_type": "aij",
             "ksp_type": "preonly",
             "ksp_atol": 1e-8,
-            "pc_type": "lu",
-            "pc_factor_mat_solver_package": "mumps"
+            "pc_type": "hypre",
         }
 
         if self.verbose:
@@ -48,30 +44,11 @@ class EnergyEq(object):
 
         # ENERGY EQUATION
 
-        # FORWARD EULER
-        if self.temp_disc == "forward_euler":
-            F1 = inner((self.T1 - self.T0), s) * dx \
-                + idt / (self.rho * self.cp) \
-                * self._weak_form(self.u, self.T0, s, self.rho, self.cp, self.k)
-
         # BACKWAD EULER
-        elif self.temp_disc == "backward_euler":
-            F1 = inner((self.T1 - self.T0), s) * dx \
-                + idt / (self.rho * self.cp) \
-                * self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k)
 
-        # CRANK NICOLSON
-        elif self.temp_disc == "crank_nicolson":
-            F1 = inner((self.T1 - self.T0), s) * dx \
-                + idt / (self.rho * self.cp) * 0.5 * (
-                self._weak_form(self.u, self.T0, s, self.rho, self.cp, self.k) +
-                self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k))
-
-        # BDF2
-        elif self.temp_disc == "bdf2":
-            F1 = inner(1.5 * self.T1 - 2.0 * self.T0 + 0.5 * self.T_1, s) * dx \
-                + idt / (self.rho * self.cp) \
-                * self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k)
+        F1 = inner((self.T1 - self.T0), s) * dx \
+             + idt / (self.rho * self.cp) \
+               * self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k)
 
         self.energy_eq_problem = NonlinearVariationalProblem(
             F1, self.T1, self.T_bcs)
@@ -92,7 +69,7 @@ class EnergyEq(object):
     def step(self, u):
         self.set_u(u)
         if self.verbose:
-            printp0("EnergyEquations")
+            printp0("EnergyEquation")
 
         self.energy_eq_solver.solve()
         self.T_1.assign(self.T0)
