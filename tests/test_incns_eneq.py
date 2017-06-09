@@ -29,16 +29,18 @@ def test_incns_eneq_setup():
     incns = IncNavierStokes(mesh)
     eneq = EnergyEq(mesh)
 
-    V = incns.get_u_fs()
-    Q = incns.get_p_fs()
-    S = eneq.get_T_fs()
+    incns.dt = 0.05
+    eneq.dt = incns.dt
+
+    W = incns.get_mixed_fs()
+    S = eneq.get_fs()
 
     inflow_profile = (
         "1.5 * 4.0 * x[1] * (0.41 - x[1]) / ( 0.41 * 0.41 )", "0.0")
-    bcu_inflow = DirichletBC(V, Expression(inflow_profile, degree=2), (1,))
-    bcu_walls = DirichletBC(V, Constant((0.0, 0.0)), (2, 4))
-    bcu_cylinder = DirichletBC(V, Constant((0, 0)), (5,))
-    bcp_outflow = DirichletBC(Q, Constant(0), (3,))
+    bcu_inflow = DirichletBC(W.sub(0), Expression(inflow_profile, degree=2), (1,))
+    bcu_walls = DirichletBC(W.sub(0), Constant((0.0, 0.0)), (2, 4))
+    bcu_cylinder = DirichletBC(W.sub(0), Constant((0, 0)), (5,))
+    bcp_outflow = DirichletBC(W.sub(1), Constant(0), (3,))
 
     bcT = [DirichletBC(S, Constant(300.0), (1,)),
            DirichletBC(S, Constant(250.0), (2, 4))]
@@ -49,7 +51,7 @@ def test_incns_eneq_setup():
     eneq.set_bcs(bcT)
 
     incns.setup_solver()
-    eneq.setup_solver(V)
+    eneq.setup_solver(W.sub(0))
     outfile = File(join(data_dir, "../", "results/", "test_incns_eneq.pvd"))
 
     step = 0

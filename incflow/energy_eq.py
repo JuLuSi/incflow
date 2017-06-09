@@ -17,7 +17,8 @@ class EnergyEq(object):
 
         self.energy_eq_solver_parameters = {
             "mat_type": "aij",
-            "ksp_type": "preonly",
+            "snes_type": "ksponly",
+            "ksp_type": "cg",
             "ksp_atol": 1e-8,
             "pc_type": "hypre",
         }
@@ -57,7 +58,7 @@ class EnergyEq(object):
             self.energy_eq_problem,
             solver_parameters=self.energy_eq_solver_parameters)
 
-    def get_T_fs(self):
+    def get_fs(self):
         return self.S
 
     def set_bcs(self, T_bcs):
