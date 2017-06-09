@@ -1,0 +1,44 @@
+sudo: false
+language: python
+python: "2.7"
+addons:
+  apt:
+    packages:
+        - build-essential
+        - python-dev
+        - git
+        - mercurial
+        - python-pip
+        - python-scipy
+        - libopenmpi-dev
+        - openmpi-bin
+        - libblas-dev
+        - liblapack-dev
+        - gfortran
+        - libspatialindex-dev
+        - git-core
+        - python-tk
+os:
+  - linux
+
+env:
+  global:
+    - CC=mpicc
+    # HACK: travis runs 12.04 for which the CMAKE version is too old to
+    # build Eigen, let PETSc build it instead.
+    - PETSC_CONFIGURE_OPTIONS="--download-cmake"
+
+before_install:
+  - pip install -U pip
+  - pip install -U virtualenv
+  - pip install pep8-naming
+  - pip install flake8
+
+install:
+  - curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
+  - travis_wait 45 python ./firedrake-install --disable-ssh --minimal-petsc
+  - . ./firedrake/bin/activate
+  - pip install -e .
+
+script:
+  - py.test -v -m "not regression" tests

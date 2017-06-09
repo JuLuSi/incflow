@@ -3,11 +3,13 @@ from os.path import abspath, basename, dirname, join
 from firedrake import *
 from firedrake.petsc import PETSc
 from incflow import *
+import pytest
 
 cwd = abspath(dirname(__file__))
 data_dir = join(cwd, "data")
 
 
+@pytest.mark.regression
 def test_incns_eneq_setup():
     mesh = Mesh(data_dir + "/cyl.e")
 
@@ -26,10 +28,10 @@ def test_incns_eneq_setup():
     mesh = Mesh(dm, dim=mesh.ufl_cell().geometric_dimension(), distribute=False,
                 reorder=True)
 
-    incns = IncNavierStokes(mesh, nu=0.001, rho=1.0)
+    incns = IncNavierStokes(mesh, nu=0.0001, rho=1.0)
     eneq = EnergyEq(mesh)
 
-    incns.dt = 0.05
+    incns.dt = 0.005
     eneq.dt = incns.dt
 
     W = incns.get_mixed_fs()

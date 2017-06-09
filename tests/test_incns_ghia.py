@@ -39,6 +39,7 @@ def plot_results(u1, re):
     plt.show()
 
 
+@pytest.mark.regression
 def test_incns_ghia_benchmark():
     N = 50
     Re = 1000

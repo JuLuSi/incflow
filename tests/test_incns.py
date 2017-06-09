@@ -10,7 +10,7 @@ cwd = abspath(dirname(__file__))
 data_dir = join(cwd, "data")
 
 
-@pytest.mark.skip(reason="regression test")
+@pytest.mark.regression
 def test_incns_dfg_benchmark():
     mesh = Mesh(data_dir + "/cyl.e")
 
@@ -77,7 +77,7 @@ def test_incns_dfg_benchmark():
         step += 1
 
 
-@pytest.mark.skip(reason="regression test")
+@pytest.mark.regression
 def test_steady_mms():
     N = 32
     mesh = RectangleMesh(N, N, 1.0, 1.0)
