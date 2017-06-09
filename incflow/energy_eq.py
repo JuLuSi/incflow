@@ -19,12 +19,13 @@ class EnergyEq(object):
             "mat_type": "aij",
             "snes_type": "ksponly",
             "ksp_type": "cg",
-            "ksp_atol": 1e-8,
+            "ksp_atol": 1e-10,
             "pc_type": "hypre",
         }
 
         if self.verbose:
             self.energy_eq_solver_parameters["snes_monitor"] = True
+            self.energy_eq_solver_parameters["ksp_converged_reason"] = True
 
     def _weak_form(self, u, T, s, rho, cp, k):
         F = inner(dot(grad(T), u), s) * dx \

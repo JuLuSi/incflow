@@ -26,7 +26,7 @@ def test_incns_eneq_setup():
     mesh = Mesh(dm, dim=mesh.ufl_cell().geometric_dimension(), distribute=False,
                 reorder=True)
 
-    incns = IncNavierStokes(mesh)
+    incns = IncNavierStokes(mesh, nu=0.001, rho=1.0)
     eneq = EnergyEq(mesh)
 
     incns.dt = 0.05

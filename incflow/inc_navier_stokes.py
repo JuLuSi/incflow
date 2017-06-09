@@ -9,12 +9,12 @@ from .util import *
 
 
 class IncNavierStokes(object):
-    def __init__(self, mesh):
+    def __init__(self, mesh, nu, rho):
         self.verbose = True
         self.mesh = mesh
         self.dt = 0.001
-        self.nu = 0.001
-        self.rho = 1.0
+        self.nu = nu
+        self.rho = rho
         self.mu = self.nu * self.rho
         self.has_nullspace = False
 

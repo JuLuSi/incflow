@@ -45,13 +45,9 @@ def test_incns_ghia_benchmark():
 
     mesh = UnitSquareMesh(N, N)
 
-    incns = IncNavierStokes(mesh)
+    incns = IncNavierStokes(mesh, nu=1.0/Re, rho=1.0)
 
-    incns.nu = 1.0 / Re
-    incns.rho = 1.0
-    incns.mu = incns.nu * incns.rho
     incns.dt = 0.1
-
     incns.has_nullspace = True
 
     W = incns.get_mixed_fs()
