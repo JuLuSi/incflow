@@ -41,7 +41,7 @@ def plot_results(u1, re):
 
 def test_incns_ghia_benchmark():
     N = 50
-    Re = 3200
+    Re = 1000
 
     mesh = UnitSquareMesh(N, N)
 
@@ -51,6 +51,8 @@ def test_incns_ghia_benchmark():
     incns.rho = 1.0
     incns.mu = incns.nu * incns.rho
     incns.dt = 0.1
+
+    incns.has_nullspace = True
 
     W = incns.get_mixed_fs()
 

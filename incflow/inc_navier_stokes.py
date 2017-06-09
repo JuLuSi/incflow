@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from itertools import chain
 from six.moves import map, range
 from firedrake import (Constant, Function, FunctionSpace, interpolate,
                        NonlinearVariationalProblem, NonlinearVariationalSolver, TestFunctions,
@@ -15,6 +16,7 @@ class IncNavierStokes(object):
         self.nu = 0.001
         self.rho = 1.0
         self.mu = self.nu * self.rho
+        self.has_nullspace = False
 
         self.forcing = Constant((0.0, 0.0))
 
@@ -55,8 +57,11 @@ class IncNavierStokes(object):
         h = CellVolume(self.mesh)
         u_norm = sqrt(dot(self.u0, self.u0))
 
-        nullspace = MixedVectorSpaceBasis(
-            self.W, [self.W.sub(0), VectorSpaceBasis(constant=True)])
+        if self.has_nullspace:
+            nullspace = MixedVectorSpaceBasis(
+                self.W, [self.W.sub(0), VectorSpaceBasis(constant=True)])
+        else:
+            nullspace = None
 
         tau = ((2.0 / self.dt) ** 2 + (2.0 * u_norm / h)
                ** 2 + (4.0 * self.nu / h ** 2) ** 2) ** (-0.5)
@@ -88,7 +93,7 @@ class IncNavierStokes(object):
             - self.nu * div(grad(v))
             + (1.0 / self.rho) * grad(q), R) * dx
 
-        self.problem = NonlinearVariationalProblem(F, self.up, self.u_bcs)
+        self.problem = NonlinearVariationalProblem(F, self.up, self.bcs)
         self.solver = NonlinearVariationalSolver(
             self.problem,
             nullspace=nullspace,
@@ -101,8 +106,7 @@ class IncNavierStokes(object):
         self.forcing = forcing
 
     def set_bcs(self, u_bcs, p_bcs):
-        self.u_bcs = u_bcs
-        self.p_bcs = p_bcs
+        self.bcs = list(chain.from_iterable([u_bcs, p_bcs]))
 
     def step(self):
         if self.verbose:
