@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 from six.moves import map, range
+from firedrake import assemble
 from firedrake.petsc import PETSc
 import scipy.sparse as sp
 
@@ -17,3 +18,7 @@ def fdmat_to_petsc(A):
 def petscmat_to_sp(A):
     Asp = A.getValuesCSR()[::-1]
     return sp.csr_matrix(Asp)
+
+
+def fdmat_to_sp(A):
+    return petscmat_to_sp(fdmat_to_petsc(assemble(A)))

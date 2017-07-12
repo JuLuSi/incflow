@@ -41,16 +41,16 @@ class EnergyEq(object):
         self.T1 = Function(self.S)
         self.T1.rename("temperature")
 
-        idt = Constant(self.dt)
+        self.idt = Constant(self.dt)
         self.T_1.assign(self.T0)
 
         # ENERGY EQUATION
 
         # BACKWAD EULER
 
-        F1 = inner((self.T1 - self.T0), s) * dx \
-             + idt / (self.rho * self.cp) \
-               * self._weak_form(self.u, self.T1, s, self.rho, self.cp, self.k)
+        F1 = inner((self.T1 - self.T0), s) * dx + self.idt / (self.rho * self.cp) * self._weak_form(self.u, self.T1, s,
+                                                                                                    self.rho, self.cp,
+                                                                                                    self.k)
 
         self.energy_eq_problem = NonlinearVariationalProblem(
             F1, self.T1, self.T_bcs)
@@ -67,7 +67,10 @@ class EnergyEq(object):
         t = TrialFunction(self.S)
         M = inner(t, s) * dx
 
-        return assemble(M)
+        return M
+
+    def get_jacobian_matrix(self):
+        return self.energy_eq_problem.J
 
     def set_bcs(self, T_bcs):
         self.T_bcs = T_bcs
