@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from firedrake import (Constant, Function, FunctionSpace,
                        NonlinearVariationalProblem, NonlinearVariationalSolver, TestFunction,
-                       VectorFunctionSpace, dot, dx, grad, inner, nabla_grad)
+                       VectorFunctionSpace, dot, dx, grad, inner, nabla_grad, assemble, TrialFunction)
 from .util import *
 
 
@@ -61,6 +61,13 @@ class EnergyEq(object):
 
     def get_fs(self):
         return self.S
+
+    def get_mass_matrix(self):
+        s = TestFunction(self.S)
+        t = TrialFunction(self.S)
+        M = inner(t, s) * dx
+
+        return assemble(M)
 
     def set_bcs(self, T_bcs):
         self.T_bcs = T_bcs
