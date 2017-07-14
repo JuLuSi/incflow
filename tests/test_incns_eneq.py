@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, division
 from os.path import abspath, basename, dirname, join
 from firedrake import *
-from firedrake.petsc import PETSc
 from incflow import *
 import pytest
 
@@ -15,7 +14,7 @@ def test_incns_eneq_setup():
 
     dm = mesh._plex
     from firedrake.mg.impl import filter_exterior_facet_labels
-    for _ in range(1):
+    for _ in range(2):
         dm.setRefinementUniform(True)
         dm = dm.refine()
         dm.removeLabel("interior_facets")
@@ -28,10 +27,10 @@ def test_incns_eneq_setup():
     mesh = Mesh(dm, dim=mesh.ufl_cell().geometric_dimension(), distribute=False,
                 reorder=True)
 
-    incns = IncNavierStokes(mesh, nu=0.0001, rho=1.0)
+    incns = IncNavierStokes(mesh, nu=0.00005, rho=1.0)
     eneq = EnergyEq(mesh)
 
-    incns.dt = 0.005
+    incns.dt = 0.0005
     eneq.dt = incns.dt
 
     W = incns.get_mixed_fs()
@@ -59,6 +58,14 @@ def test_incns_eneq_setup():
     step = 0
     t = 0.0
     t_end = 35.0
+    num_timesteps = int(t_end / incns.dt)
+    output_frequency = 50
+
+    print("Number of timesteps: {}".format(num_timesteps))
+    print("Output frequency: {}".format(output_frequency))
+    print("Number of output files: {}".format(int(num_timesteps / output_frequency)))
+    print("INS DOFs: {}".format(incns.up0.vector().size()))
+    print("ENEq DOFs: {}".format(eneq.T0.vector().size()))
 
     while(t <= t_end):
         t += incns.dt
@@ -71,7 +78,7 @@ def test_incns_eneq_setup():
 
         printp0("")
 
-        if step % 5 == 0:
+        if step % output_frequency == 0:
             outfile.write(u1, p1, T1)
 
         step += 1

@@ -20,5 +20,5 @@ def petscmat_to_sp(A):
     return sp.csr_matrix(Asp)
 
 
-def fdmat_to_sp(A):
+def form_to_sp(A):
     return petscmat_to_sp(fdmat_to_petsc(assemble(A)))
