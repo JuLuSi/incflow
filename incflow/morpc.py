@@ -23,14 +23,15 @@ class MORPC(PCBase):
 
         KpInv = PETSc.KSP().create()
         KpInv.setOperators(Kp)
-        KpInv.setType("preonly")
+        #KpInv.setType("preonly")
         KpInvPC = KpInv.getPC()
         KpInvPC.setFactorSolverPackage("mumps")
         KpInv.setUp()
         self.KpInv = KpInv
 
         # Create projected space vectors
-        self.Xp, self.Yp = self.Z.createVecs()
+        self.Xp, _ = self.Z.createVecs()
+        self.Yp, _ = self.Z.createVecs()
 
     def update(self, pc):
         pass

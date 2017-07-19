@@ -69,6 +69,13 @@ class EnergyEq(object):
 
         return M
 
+    def get_H1_matrix(self):
+        s = TestFunction(self.S)
+        t = TrialFunction(self.S)
+        H = inner(t, s) * dx + inner(grad(t), grad(s)) * dx
+
+        return H
+
     def get_jacobian_matrix(self):
         return self.energy_eq_problem.J
 
