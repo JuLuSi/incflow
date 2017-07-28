@@ -42,6 +42,8 @@ class POD_SLEPc():
 
         E.setOperators(Cp)
         E.setDimensions(Cp.size[0], -1, -1)
+        E.setTolerances(1.e-15,None)
+        E.setProblemType(2) # Generalized Hermitian Problem
         E.setFromOptions()
 
         E.solve()
@@ -52,15 +54,15 @@ class POD_SLEPc():
         eigvr, _ = Cp.getVecs()
         eigvimg, _ = Cp.getVecs()
 
-        count = 0
+        count = nconv
         for i in range(nconv):
             a = E.getEigenpair(i, eigvr, eigvimg)
             vr = a.real
             vi = a.imag
-            if vr > 0 and abs(vi) <= tol:
-                # In SLEPc eigenvalues are sorted by magnitude, we want only the positive and
-                # we check if there are no negligible complex parts
-                count = count + 1
+            if vr <= 0 or abs(vi) > tol:
+                #We want only the positive and we check if there are no negligible complex parts
+                count = min(count,i)
+                break
 
         Lmax = min(nconv, count)
         self.L = min(Lmax, N)
@@ -72,18 +74,13 @@ class POD_SLEPc():
         eigv.setSizes([eigvr.size, Lmax])
         eigv.setUp()
 
-        count = 0
-        i=0
-        while i<nconv and count < Lmax:
+        for i in range(Lmax):
             a = E.getEigenpair(i, eigvr, eigvimg)
             vr = a.real
             vi = a.imag
-            if vr > 0 and abs(vi) <= tol:
-                # Now we can store the values, once we know the dimension of eigs and eigv we can take
-                eigs.setValue(i, vr)
-                eigv.setValues(range(eigv.size[0]), i, eigvr.getValues(range(eigv.size[0])))
-                count = count + 1
-            i=i+1
+            # Now we can store the values, once we know the dimension of eigs and eigv we can take
+            eigs.setValue(i, vr)
+            eigv.setValues(range(eigv.size[0]), i, eigvr.getValues(range(eigv.size[0])))
 
         eigv.assemble()
 
