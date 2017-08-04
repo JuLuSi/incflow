@@ -7,10 +7,12 @@ from slepc4py import SLEPc
 class POD():
     def __init__(self):
         self.snapshot_mat = PETSc.Mat().create(PETSc.COMM_WORLD)
+        self.snapshot_mat.setType('dense')
         self.full_basis_mat = PETSc.Mat().create(PETSc.COMM_WORLD)
+        self.full_basis_mat.setType('dense')
         self.basis_mat = PETSc.Mat().create(PETSc.COMM_WORLD)
+        self.basis_mat.setType('dense')
         self.L = 0
-        # self.snapshot_mat.setType('dense')
 
     def clear(self):
         self.snapshot_mat.destroy()
@@ -40,18 +42,15 @@ class POD():
             tol: Tolerance for the negligible part of complex value in the eigenvalues.
         """
 
-        Cp = D.matMult(IP.matMult(self.snapshot_mat.matMult(
-            D)).transposeMatMult(self.snapshot_mat))
+        Cp = D.matMult(self.snapshot_mat.transposeMatMult(IP.matMult(self.snapshot_mat.matMult(D))))
 
         E = SLEPc.EPS()
         E.create()
 
         E.setOperators(Cp)
         E.setDimensions(Cp.size[0], -1, -1)
-        E.setTolerances(1.e-15, None)
-        E.setProblemType(2)  # Generalized Hermitian Problem
+        # E.setProblemType(SLEPc.EPS.ProblemType.HEP)
         E.setFromOptions()
-
         E.solve()
 
         nconv = E.getConverged()
@@ -111,8 +110,8 @@ class POD():
         self.basis_mat.setUp()
 
         self.basis_mat.setValues(range(self.snapshot_mat.size[0]), range(self.L),
-                                    self.full_basis_mat.getValues(range(self.snapshot_mat.size[0]),
-                                                                     range(self.L)))
+                                 self.full_basis_mat.getValues(range(self.snapshot_mat.size[0]),
+                                                               range(self.L)))
         self.basis_mat.assemble()
 
         print("Choosen ", self.L, "basis of ", Lmax, " with ratio=", ratio)
