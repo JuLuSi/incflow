@@ -3,8 +3,7 @@ from os.path import abspath, basename, dirname, join
 from incflow import *
 from firedrake import *
 from firedrake.petsc import PETSc
-from pod import *
-from Error_Computation import *
+from error_computation import *
 
 cwd = abspath(dirname(__file__))
 data_dir = join(cwd, "data")
