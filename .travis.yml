@@ -5,11 +5,11 @@ addons:
   apt:
     packages:
         - build-essential
-        - python-dev
+        - python3-dev
         - git
         - mercurial
-        - python-pip
-        - python-scipy
+        - python3-pip
+        - python3-scipy
         - libopenmpi-dev
         - openmpi-bin
         - libblas-dev
@@ -17,7 +17,7 @@ addons:
         - gfortran
         - libspatialindex-dev
         - git-core
-        - python-tk
+        - python3-tk
 os:
   - linux
 
@@ -36,7 +36,7 @@ before_install:
 
 install:
   - curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
-  - travis_wait 45 python ./firedrake-install --disable-ssh --minimal-petsc
+  - travis_wait 45 python ./firedrake-install --disable-ssh --minimal-petsc --slepc
   - . ./firedrake/bin/activate
   - pip install -e .
 
