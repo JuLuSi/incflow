@@ -28,12 +28,6 @@ env:
     # build Eigen, let PETSc build it instead.
     - PETSC_CONFIGURE_OPTIONS="--download-cmake"
 
-before_install:
-  - pip install -U pip
-  - pip install -U virtualenv
-  - pip install pep8-naming
-  - pip install flake8
-
 install:
   - curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
   - travis_wait 45 python3 ./firedrake-install --disable-ssh --minimal-petsc --slepc
