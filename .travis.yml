@@ -36,9 +36,13 @@ before_install:
 
 install:
   - curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
-  - travis_wait 45 python ./firedrake-install --disable-ssh --minimal-petsc --slepc
+  - travis_wait 45 python3 ./firedrake-install --disable-ssh --minimal-petsc --slepc
   - . ./firedrake/bin/activate
   - pip install -e .
 
 script:
   - py.test -v -m "not regression" tests
+
+cache:
+  directories:
+  - $HOME/firedrake
