@@ -9,22 +9,7 @@ cwd = abspath(dirname(__file__))
 data_dir = join(cwd, "data")
 
 mesh = Mesh(data_dir + "/cyl.e")
-
-dm = mesh._plex
-from firedrake.mg.impl import filter_exterior_facet_labels
-
-for _ in range(1):
-    dm.setRefinementUniform(True)
-    dm = dm.refine()
-    dm.removeLabel("interior_facets")
-    dm.removeLabel("op2_core")
-    dm.removeLabel("op2_non_core")
-    dm.removeLabel("op2_exec_halo")
-    dm.removeLabel("op2_non_exec_halo")
-    filter_exterior_facet_labels(dm)
-
-mesh = Mesh(dm, dim=mesh.ufl_cell().geometric_dimension(), distribute=False,
-            reorder=True)
+mesh = MeshHierarchy(mesh, 1)[-1]
 
 incns = IncNavierStokes(mesh, nu=0.0001, rho=1.0)
 eneq = EnergyEq(mesh)
