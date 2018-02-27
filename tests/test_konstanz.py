@@ -32,7 +32,7 @@ outfile = File(join(data_dir, "../", "results/", "test_konstanz.pvd"))
 
 step = 0
 t = 0.0
-t_end = 0.5
+t_end = 1.0
 num_timesteps = int(t_end / incns.dt)
 output_frequency = 5
 
@@ -68,3 +68,21 @@ for snapshot in snapshots:
 
 savemat(join(data_dir, '../', 'results/', 'snapshots.mat'),
         {'S': np.array(snapshots_array)})
+
+
+vel_is, pressure_is = W.dof_dset.field_ises
+vel_indices = vel_is.indices
+pressure_indices = pressure_is.indices
+
+Vv = VectorFunctionSpace(mesh, 'CG', 2)
+Qv = VectorFunctionSpace(mesh, 'CG', 1)
+
+Vcoords = interpolate(SpatialCoordinate(mesh), Vv)
+Qcoords = interpolate(SpatialCoordinate(mesh), Qv)
+
+savemat('index_sets.mat', {'vel_idx': vel_indices + 1,
+                                          'pressure_idx': pressure_indices + 1})
+savemat('coordinates.mat', {'vel_coords':
+                                           Vcoords.vector().array().reshape(-1, mesh.geometric_dimension()),
+                                           'pressure_coords':
+                                           Qcoords.vector().array().reshape(-1, mesh.geometric_dimension())})
