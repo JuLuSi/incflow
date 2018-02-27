@@ -10,9 +10,9 @@ data_dir = join(cwd, "data")
 mesh = Mesh(data_dir + "/room.e")
 mesh = MeshHierarchy(mesh, 1)[-1]
 
-incns = IncNavierStokes(mesh, nu=0.0005, rho=1.0)
+incns = IncNavierStokes(mesh, nu=1.81e-5, rho=1.1839)
 
-incns.dt = 0.1
+incns.dt = 0.01
 
 W = incns.get_mixed_fs()
 
@@ -56,9 +56,15 @@ while t <= t_end:
     if step % output_frequency == 0:
         outfile.write(u1, p1)
 
-    with u1.dat.vec as u1_loc:
-        snapshots.append(u1_loc.array)
+    snapshots.append(u1.copy(deepcopy=True))
 
     step += 1
 
-savemat(data_dir + 'snapshots.mat', {'S': np.array(snapshots)})
+snapshots_array = []
+
+for snapshot in snapshots:
+    with snapshot.dat.vec as snapshot_loc:
+        snapshots_array.append(snapshot_loc.array)
+
+savemat(join(data_dir, '../', 'results/', 'snapshots.mat'),
+        {'S': np.array(snapshots_array)})
