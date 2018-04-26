@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 from firedrake import (Constant, Function, FunctionSpace,
                        NonlinearVariationalProblem, NonlinearVariationalSolver, TestFunction,
                        VectorFunctionSpace, dot, dx, grad, inner, nabla_grad, assemble, TrialFunction)
@@ -10,7 +11,7 @@ class EnergyEq(object):
         self.mesh = mesh
         self.dt = 0.001
         self.k = 0.0257
-        self.rho = 1.0
+        self.rho = 1.1644
         self.cp = 1.005
         self.S = FunctionSpace(self.mesh, "CG", 1)
 
@@ -27,15 +28,14 @@ class EnergyEq(object):
             self.energy_eq_solver_parameters["ksp_converged_reason"] = True
 
     def _weak_form(self, u, T, s, rho, cp, k):
-        F = inner(dot(grad(T), u), s) * dx + k * inner(grad(T), grad(s)) * dx
-
+        F = inner(dot(grad(T), u), s) * dx \
+            + k * inner(grad(T), grad(s)) * dx
         return F
 
     def setup_solver(self, V):
         self.V = V
         self.u = Function(self.V)
         s = TestFunction(self.S)
-
         self.T_1 = Function(self.S)
         self.T0 = Function(self.S)
         self.T1 = Function(self.S)
@@ -44,40 +44,13 @@ class EnergyEq(object):
         self.idt = Constant(self.dt)
         self.T_1.assign(self.T0)
 
-        F1 = (inner((self.T1 - self.T0), s) * dx
-              + 1.0 / self.idt *
-              (self.rho * self.cp) * self._weak_form(self.u, self.T1, s,
-                                                     self.rho, self.cp,
-                                                     self.k)
-        )
+        # ENERGY EQUATION
 
-        self.energy_eq_problem = NonlinearVariationalProblem(
-            F1, self.T1, self.T_bcs)
+        # BACKWAD EULER
 
-        self.energy_eq_solver = NonlinearVariationalSolver(
-            self.energy_eq_problem,
-            solver_parameters=self.energy_eq_solver_parameters)
-
-    def setup_adjoint_solver(self, V):
-        self.V = V
-        self.u = Function(self.V)
-        s = TestFunction(self.S)
-
-        self.T_1 = Function(self.S)
-        self.T0 = Function(self.S)
-        self.T1 = Function(self.S)
-        self.T1.rename("temperature")
-
-        self.idt = Constant(self.dt)
-        self.T_1.assign(self.T0)
-
-        F1 = (
-            -inner((self.T1 - self.T0), s) * dx
-            + 1.0 / self.idt * (self.rho * self.cp) *
-            self._weak_form(self.u, self.T1, s,
-                            self.rho, self.cp,
-                            self.k)
-        )
+        F1 = inner((self.T1 - self.T0), s) * dx + self.idt / (self.rho * self.cp) * self._weak_form(self.u, self.T1, s,
+                                                                                                    self.rho, self.cp,
+                                                                                                    self.k)
 
         self.energy_eq_problem = NonlinearVariationalProblem(
             F1, self.T1, self.T_bcs)
@@ -115,7 +88,7 @@ class EnergyEq(object):
     def step(self, u):
         self.set_u(u)
         if self.verbose:
-            printp0("EnergyEquationAdjoint")
+            printp0("EnergyEquation")
 
         self.energy_eq_solver.solve()
         self.T_1.assign(self.T0)
