@@ -18,11 +18,11 @@ class IncNavierStokes(object):
         self.mu = self.nu * self.rho
         self.has_nullspace = False
 
-        self.forcing = Constant((0.0, 0.0))
-
         self.V = VectorFunctionSpace(self.mesh, "CG", 2)
         self.Q = FunctionSpace(self.mesh, "CG", 1)
         self.W = self.V * self.Q
+
+        self.forcing = Function(self.V)
 
         self.solver_parameters = {
             "mat_type": "aij",
@@ -102,8 +102,8 @@ class IncNavierStokes(object):
     def get_mixed_fs(self):
         return self.W
 
-    def set_forcing(self, forcing):
-        self.forcing = forcing
+    def set_forcing(self, f):
+        self.forcing.project(f)
 
     def set_bcs(self, u_bcs, p_bcs):
         self.bcs = list(chain.from_iterable([u_bcs, p_bcs]))
