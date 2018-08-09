@@ -51,7 +51,7 @@ while t <= t_end:
     printp0("Timestep {}".format(t))
 
     model.set_forcing(
-        Constant(1.0 / 293.5) * (model.T0 - Constant(293.5)) * as_vector([Constant(0.0), Constant(-9.81)]))
+        Constant(1.0 / 293.5) * (model.T0 - Constant(293.5)) * as_vector([Constant(0.0), Constant(9.81)]))
 
     u1, p1, T1 = model.step()
 
