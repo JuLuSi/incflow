@@ -1,8 +1,8 @@
-from __future__ import absolute_import, print_function, division
 from six.moves import map, range
 from firedrake import assemble
 from firedrake.petsc import PETSc
 import scipy.sparse as sp
+import time
 
 
 def printp0(message):
@@ -22,3 +22,16 @@ def petscmat_to_sp(A):
 
 def form_to_sp(A):
     return petscmat_to_sp(fdmat_to_petsc(assemble(A)))
+
+
+class Timer(object):
+    def __init__(self, name=None):
+        self.name = name
+
+    def __enter__(self):
+        self.tstart = time.time()
+
+    def __exit__(self, type, value, traceback):
+        if self.name:
+            print('[%s]' % self.name)
+            print('Elapsed: %s' % (time.time() - self.tstart))

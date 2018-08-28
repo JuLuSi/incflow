@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 from firedrake import (Constant, Function, FunctionSpace,
                        NonlinearVariationalProblem, NonlinearVariationalSolver, TestFunction,
                        VectorFunctionSpace, dot, dx, grad, inner, nabla_grad, assemble, TrialFunction)
@@ -6,20 +5,20 @@ from .util import *
 
 
 class EnergyEq(object):
-    def __init__(self, mesh):
+    def __init__(self, mesh, rho, k, cp):
         self.verbose = True
         self.mesh = mesh
         self.dt = 0.001
-        self.k = 0.0257
-        self.rho = 1.1644
-        self.cp = 1.005
+        self.k = k  # 0.0257
+        self.rho = rho  # 1.1644
+        self.cp = cp  # 1005
         self.S = FunctionSpace(self.mesh, "CG", 1)
 
         self.energy_eq_solver_parameters = {
             "mat_type": "aij",
             "snes_type": "ksponly",
             "ksp_type": "cg",
-            "ksp_atol": 1e-10,
+            # "ksp_atol": 1e-10,
             "pc_type": "hypre",
         }
 
@@ -48,12 +47,14 @@ class EnergyEq(object):
 
         # BACKWAD EULER
 
-        F1 = inner((self.T1 - self.T0), s) * dx + self.idt / (self.rho * self.cp) * self._weak_form(self.u, self.T1, s,
-                                                                                                    self.rho, self.cp,
-                                                                                                    self.k)
+        F = (
+                (1.0 / self.dt) * self.rho * self.cp * inner((self.T1 - self.T0), s) * dx
+                + self.rho * self.cp * inner(dot(self.u, grad(self.T1)), s) * dx
+                + self.k * inner(grad(self.T1), grad(s)) * dx
+        )
 
         self.energy_eq_problem = NonlinearVariationalProblem(
-            F1, self.T1, self.T_bcs)
+            F, self.T1, self.T_bcs)
 
         self.energy_eq_solver = NonlinearVariationalSolver(
             self.energy_eq_problem,

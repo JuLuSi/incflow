@@ -1,6 +1,4 @@
-from __future__ import absolute_import, division, print_function
 from itertools import chain
-from six.moves import map, range
 from firedrake import (Constant, Function, FunctionSpace, interpolate,
                        NonlinearVariationalProblem, NonlinearVariationalSolver, TestFunctions,
                        VectorFunctionSpace, div, nabla_grad, dot, dx, grad, inner, VectorSpaceBasis,
@@ -30,7 +28,7 @@ class IncNavierStokes(object):
             "ksp_type": "fgmres",
             "pc_type": "asm",
             "pc_asm_type": "restrict",
-            "pc_asm_overlap": 2,
+            "pc_asm_overlap": 1,
             "sub_ksp_type": "preonly",
             "sub_pc_type": "ilu",
             "sub_pc_factor_levels": 1,
@@ -88,10 +86,10 @@ class IncNavierStokes(object):
         )
 
         # GLS
-        F += tau * inner(
-            + dot(self.u0, nabla_grad(v))
-            - self.nu * div(grad(v))
-            + (1.0 / self.rho) * grad(q), R) * dx
+        # F += tau * inner(
+        #     + dot(self.u0, nabla_grad(v))
+        #     - self.nu * div(grad(v))
+        #     + (1.0 / self.rho) * grad(q), R) * dx
 
         self.problem = NonlinearVariationalProblem(F, self.up, self.bcs)
         self.solver = NonlinearVariationalSolver(

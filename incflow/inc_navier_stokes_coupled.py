@@ -28,7 +28,6 @@ class IncNavierStokesEnEq(object):
 
         self.solver_parameters = {
             "mat_type": "aij",
-            "snes_type": "ksponly",
             "ksp_type": "fgmres",
             "pc_type": "asm",
             "pc_asm_type": "restrict",
@@ -37,12 +36,20 @@ class IncNavierStokesEnEq(object):
             "sub_pc_type": "ilu",
             "sub_pc_factor_levels": 1,
         }
+        
+        # self.solver_parameters = {
+        #     "ksp_type": "gmres",
+        #     "mat_type": "aij",
+        #     "pc_type": "lu",
+        #     "pc_factor_mat_solver_type": "mumps"
+        # }
 
         if self.verbose:
             self.solver_parameters["snes_monitor"] = True
+            self.solver_parameters["snes_converged_reason"] = True
             self.solver_parameters["ksp_converged_reason"] = True
 
-    def setup_solver(self):
+    def setup_solver(self, stabilization=False):
         """ Setup the solvers
         """
         self.upT0 = Function(self.W)
@@ -51,9 +58,9 @@ class IncNavierStokesEnEq(object):
         self.upT = Function(self.W)
         self.u1, self.p1, self.T1 = split(self.upT)
 
-        self.upT.sub(0).rename("velocity")
-        self.upT.sub(1).rename("pressure")
-        self.upT.sub(2).rename("temperature")
+        self.upT0.sub(0).rename("velocity")
+        self.upT0.sub(1).rename("pressure")
+        self.upT0.sub(2).rename("temperature")
 
         v, q, s = TestFunctions(self.W)
 
@@ -62,7 +69,7 @@ class IncNavierStokesEnEq(object):
 
         if self.has_nullspace:
             nullspace = MixedVectorSpaceBasis(
-                self.W, [self.W.sub(0), VectorSpaceBasis(constant=True)])
+                self.W, [self.W.sub(0), VectorSpaceBasis(constant=True), self.W.sub(2)])
         else:
             nullspace = None
 
@@ -74,32 +81,35 @@ class IncNavierStokesEnEq(object):
 
         # weak form
         self.F += (
-            + inner(dot(self.u0, nabla_grad(self.u1)), v) * dx
-            + self.nu * inner(grad(self.u1), grad(v)) * dx
-            - (1.0 / self.rho) * self.p1 * div(v) * dx
-            + div(self.u1) * q * dx
-            - inner(self.forcing, v) * dx
+                + inner(dot(self.u1, nabla_grad(self.u1)), v) * dx
+                + self.nu * inner(grad(self.u1), grad(v)) * dx
+                - (1.0 / self.rho) * self.p1 * div(v) * dx
+                + div(self.u1) * q * dx
+                - inner(self.forcing, v) * dx
         )
 
-        # residual form
-        R = (
-            + (1.0 / self.dt) * (self.u1 - self.u0)
-            + dot(self.u0, nabla_grad(self.u1))
-            - self.nu * div(grad(self.u1))
-            + (1.0 / self.rho) * grad(self.p1)
-            - self.forcing
-        )
+        if stabilization:
+            # GLS
 
-        # GLS
-        self.F += tau * inner(
-            + dot(self.u0, nabla_grad(v))
-            - self.nu * div(grad(v))
-            + (1.0 / self.rho) * grad(q), R) * dx
+            # residual form
+            R = (
+                    + (1.0 / self.dt) * (self.u1 - self.u0)
+                    + dot(self.u0, nabla_grad(self.u1))
+                    - self.nu * div(grad(self.u1))
+                    + (1.0 / self.rho) * grad(self.p1)
+                    - self.forcing
+            )
 
+            self.F += tau * inner(
+                + dot(self.u0, nabla_grad(v))
+                - self.nu * div(grad(v))
+                + (1.0 / self.rho) * grad(q), R) * dx
+
+        self.F += self.rho * self.cp * (1.0 / self.dt) * inner((self.T1 - self.T0), s) * dx
+        
         self.F += (
-                self.rho * self.cp * (1.0 / self.dt) * inner((self.T1 - self.T0), s) * dx
-                + inner(dot(grad(self.T1), self.u1), s) * dx
-                + self.k * inner(grad(self.T1), grad(s)) * dx
+            self.rho * self.cp * inner(dot(self.u1, grad(self.T1)), s) * dx
+            + self.k * inner(grad(self.T1), grad(s)) * dx
         )
 
         self.problem = NonlinearVariationalProblem(self.F, self.upT, self.bcs)
@@ -122,4 +132,4 @@ class IncNavierStokesEnEq(object):
             printp0("IncNavierStokesEnEq")
         self.solver.solve()
         self.upT0.assign(self.upT)
-        return self.upT.split()
+        return self.upT0.split()

@@ -19,8 +19,8 @@ def plot_results(u1, re):
     M = np.genfromtxt(join(data_dir, "ghia.txt"), comments='#', usecols=(6, mr[re], 0, 6 + mr[re])).transpose()
 
     for i in range(len(M[:][0])):
-        tmp_x.append(u1.at([M[0][i], 0.5])[1])
-        tmp_y.append(u1.at([0.5, M[2][i]])[0])
+        tmp_x.append(u1.at([M[0][i], 0.5], tolerance=1e-4)[1])
+        tmp_y.append(u1.at([0.5, M[2][i]], tolerance=1e-4)[0])
 
     plt.subplot(2, 1, 1)
     plt.plot(M[0][:], tmp_x, M[0][:], M[3][:])
