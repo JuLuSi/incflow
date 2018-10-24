@@ -44,10 +44,8 @@ def test_incns_ghia_benchmark():
 
     mesh = UnitSquareMesh(N, N)
 
-    incns = IncNavierStokes(mesh, nu=1.0/Re, rho=1.0)
-
+    incns = IncNavierStokes(mesh, nu=1.0/Re, rho=1.0, solver_preset='lsc_amg')
     incns.dt = 0.1
-    incns.has_nullspace = True
 
     W = incns.get_mixed_fs()
 
@@ -57,6 +55,7 @@ def test_incns_ghia_benchmark():
     bcs_u = [bcu_top, bcu_borders]
 
     incns.set_bcs(bcs_u, bcs_p)
+    incns.has_nullspace = True
 
     incns.setup_solver()
 
@@ -65,6 +64,8 @@ def test_incns_ghia_benchmark():
     step = 0
     t = 0.0
     t_end = 35.0
+
+    print("DOFs: {}".format(incns.up0.vector().size()))
 
     while (t < t_end):
         t += incns.dt

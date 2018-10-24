@@ -29,63 +29,72 @@ class IncNavierStokesEnEq(object):
 
         self.forcing = Function(self.W.sub(0))
 
-        # self.solver_parameters = {
-        #     "mat_type": "aij",
-        #     "ksp_type": "gmres",
-        #     "ksp_gmres_restart": 300,
-        #     "pc_type": "asm",
-        #     "pc_asm_type": "restrict",
-        #     "pc_asm_overlap": 2,
-        #     "sub_ksp_type": "preonly",
-        #     "sub_pc_type": "ilu",
-        #     "sub_pc_factor_levels": 1,
-        # }
-
-        # self.solver_parameters = {
-        #     "mat_type": "aij",
-        #     # "snes_lag_jacobian": 1,
-        #     # "snes_lag_preconditioner": 1,
-        #     "ksp_type": "preonly",
-        #     "pc_type": "lu",
-        #     "pc_factor_mat_solver_type": "mumps"
-        # }
-
         self.solver_parameters = {
             "mat_type": "aij",
             "ksp_type": "fgmres",
-            "ksp_gmres_restart": 300,
-            "pc_type": "fieldsplit",
-            "pc_fieldsplit_0_fields": "0,1",
-            "pc_fieldsplit_1_fields": "2",
-            "fieldsplit_0": {
-                "ksp_type": "gmres",
-                "ksp_rtol": 1e-5,
-                "pc_type": "fieldsplit",
-                "pc_fieldsplit_type": "schur",
-                "pc_fieldsplit_schur_fact_type": "full",
-                "pc_fieldsplit_schur_precondition": "self",
-                "fieldsplit_0": {
-                    "ksp_type": "gmres",
-                    "pc_type": "lu",
-                },
-                "fieldsplit_1": {
-                    "ksp_type": "gmres",
-                    "ksp_rtol": 1e-5,
-                    "pc_type": "lsc",
-                },                
-            },
-            # "fieldsplit_1": {
-            #     "ksp_type": "gmres",
-            #     "ksp_rtol": 1e-4,
-            #     "pc_type": "hypre",
-            #     "pc_hypre_boomeramg_P_max": 4,
-            #     "pc_hypre_boomeramg_agg_nl": 1,
-            #     "pc_hypre_boomeramg_agg_num_path": 2,
-            #     "pc_hypre_boomeramg_coarsen_type": "HMIS",
-            #     "pc_hypre_boomeramg_interp_type": "ext+i",
-            #     "pc_hypre_boomeramg_no_CF": True,
-            # },
+            "pc_type": "asm",
+            "pc_asm_type": "restrict",
+            "pc_asm_overlap": 1,
+            "sub_ksp_type": "preonly",
+            "sub_pc_type": "ilu",
+            "sub_pc_factor_levels": 1,
         }
+
+        # self.solver_parameters = {
+        #     "mat_type": "aij",
+        #     "ksp_type": "fgmres",
+        #     "ksp_gmres_restart": 300,
+        #     "pc_type": "fieldsplit",
+        #     "pc_fieldsplit_0_fields": "0,1",
+        #     "pc_fieldsplit_1_fields": "2",
+        #     "fieldsplit_0": {
+        #         "ksp_type": "gmres",
+        #         "ksp_rtol": 1e-4,
+        #         "pc_type": "fieldsplit",
+        #         "pc_fieldsplit_type": "schur",
+        #         "pc_fieldsplit_schur_fact_type": "diag",
+        #         "pc_fieldsplit_schur_precondition": "self",
+        #         "fieldsplit_0": {
+        #             "ksp_type": "preonly",
+        #             "pc_type": "hypre",
+        #             "pc_hypre_boomeramg_print_statistics": False,
+        #             "pc_hypre_boomeramg_smooth_type": "Euclid",
+        #             "pc_hypre_boomeramg_P_max": 4,
+        #             "pc_hypre_boomeramg_agg_nl": 1,
+        #             "pc_hypre_boomeramg_no_CF": True,
+        #             "pc_hypre_boomeramg_agg_num_paths": 2,
+        #             "pc_hypre_boomeramg_coarsen_type": "HMIS",
+        #             "pc_hypre_boomeramg_interp_type": "ext+i",
+        #         },
+        #         "fieldsplit_1": {
+        #             "ksp_type": "preonly",
+        #             "pc_type": "lsc",
+        #             "lsc": {
+        #                 "pc_type": "hypre",
+        #                 # "pc_hypre_boomeramg_print_statistics": False,
+        #                 # "pc_hypre_boomeramg_P_max": 4,
+        #                 # "pc_hypre_boomeramg_agg_nl": 1,
+        #                 # "pc_hypre_boomeramg_no_CF": True,
+        #                 # "pc_hypre_boomeramg_agg_num_paths": 2,
+        #                 # "pc_hypre_boomeramg_coarsen_type": "HMIS",
+        #                 # "pc_hypre_boomeramg_interp_type": "ext+i",
+        #             },
+        #         },
+        #     },
+        #     "fieldsplit_1": {
+        #         "ksp_type": "gmres",
+        #         "ksp_rtol": 1e-4,
+        #         "pc_type": "hypre",
+        #         "pc_hypre_boomeramg_print_statistics": False,
+        #         "pc_hypre_boomeramg_smooth_type": "Euclid",
+        #         "pc_hypre_boomeramg_P_max": 4,
+        #         "pc_hypre_boomeramg_agg_nl": 1,
+        #         "pc_hypre_boomeramg_agg_num_path": 2,
+        #         "pc_hypre_boomeramg_coarsen_type": "HMIS",
+        #         "pc_hypre_boomeramg_interp_type": "ext+i",
+        #         "pc_hypre_boomeramg_no_CF": True,
+        #     },
+        # }
 
         if self.verbose:
             self.solver_parameters["snes_monitor"] = True

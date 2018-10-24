@@ -16,10 +16,13 @@ class EnergyEq(object):
 
         self.energy_eq_solver_parameters = {
             "mat_type": "aij",
-            "snes_type": "ksponly",
-            "ksp_type": "cg",
-            # "ksp_atol": 1e-10,
-            "pc_type": "hypre",
+            "ksp_type": "fgmres",
+            "pc_type": "asm",
+            "pc_asm_type": "restrict",
+            "pc_asm_overlap": 1,
+            "sub_ksp_type": "preonly",
+            "sub_pc_type": "ilu",
+            "sub_pc_factor_levels": 1,
         }
 
         if self.verbose:

@@ -6,6 +6,8 @@ from incflow import *
 import csv
 import pytest
 
+set_log_level(DEBUG)
+
 cwd = abspath(dirname(__file__))
 data_dir = join(cwd, "data")
 
@@ -19,7 +21,7 @@ def test_incns_dfg_benchmark():
     nu = 0.001
 
     write_csv = True
-    testcase = 2
+    testcase = 1
 
     if testcase == 1:
         U_mean = 0.2
@@ -37,7 +39,7 @@ def test_incns_dfg_benchmark():
     incns = IncNavierStokes(mesh, nu=nu, rho=rho)
 
     # incns.dt = 1.0 / 1600.0
-    incns.dt = 0.005
+    incns.dt = 0.05
 
     W = incns.get_mixed_fs()
 

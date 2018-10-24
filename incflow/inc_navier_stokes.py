@@ -7,7 +7,7 @@ from .util import *
 
 
 class IncNavierStokes(object):
-    def __init__(self, mesh, nu, rho):
+    def __init__(self, mesh, nu, rho, solver_preset='lu'):
         self.verbose = True
         self.mesh = mesh
         self.dt = 0.001
@@ -22,9 +22,18 @@ class IncNavierStokes(object):
 
         self.forcing = Function(self.V)
 
-        self.solver_parameters = {
+        if solver_preset == 'lu':
+            self.solver_parameters = {
+                "mat_type": "aij",
+                "snes_type": "ksponly",
+                "ksp_type": "gmres",
+                "pc_type": "lu",
+                "pc_factor_mat_solver_type": "mumps",
+            }
+
+        elif solver_preset == 'asm':
+            self.solver_parameters = {
             "mat_type": "aij",
-            "snes_type": "ksponly",
             "ksp_type": "fgmres",
             "pc_type": "asm",
             "pc_asm_type": "restrict",
@@ -34,9 +43,47 @@ class IncNavierStokes(object):
             "sub_pc_factor_levels": 1,
         }
 
+        elif solver_preset == 'lsc_amg':
+            self.solver_parameters = {
+                "mat_type": "aij",
+                "snes_type": "ksponly",
+                "ksp_type": "fgmres",
+                "pc_type": "fieldsplit",
+                "pc_fieldsplit_type": "schur",
+                "pc_fieldsplit_schur_fact_type": "diag",
+                "pc_fieldsplit_schur_precondition": "self",
+                "fieldsplit_0": {
+                    "ksp_type": "preonly",
+                    "pc_type": "hypre",
+                    "pc_hypre_boomeramg_print_statistics": False,
+                    "pc_hypre_boomeramg_smooth_type": "Euclid",
+                    "pc_hypre_boomeramg_P_max": 4,
+                    "pc_hypre_boomeramg_agg_nl": 2,
+                    "pc_hypre_boomeramg_no_CF": True,
+                    "pc_hypre_boomeramg_agg_num_paths": 2,
+                    "pc_hypre_boomeramg_coarsen_type": "HMIS",
+                    "pc_hypre_boomeramg_interp_type": "ext+i",
+                },
+                "fieldsplit_1": {
+                    "ksp_type": "preonly",
+                    "pc_type": "lsc",
+                    "lsc": {
+                        "pc_type": "hypre",
+                        # "pc_hypre_boomeramg_print_statistics": False,
+                        # "pc_hypre_boomeramg_P_max": 4,
+                        # "pc_hypre_boomeramg_agg_nl": 1,
+                        # "pc_hypre_boomeramg_no_CF": True,
+                        # "pc_hypre_boomeramg_agg_num_paths": 2,
+                        # "pc_hypre_boomeramg_coarsen_type": "HMIS",
+                        # "pc_hypre_boomeramg_interp_type": "ext+i",
+                },
+                },
+            }
+
         if self.verbose:
             self.solver_parameters["snes_monitor"] = True
             self.solver_parameters["ksp_converged_reason"] = True
+            self.solver_parameters["ksp_monitor"] = True
 
     def setup_solver(self):
         """ Setup the solvers
@@ -44,11 +91,11 @@ class IncNavierStokes(object):
         self.up0 = Function(self.W)
         self.u0, self.p0 = split(self.up0)
 
-        self.up = Function(self.W)
-        self.u1, self.p1 = split(self.up)
+        self.up1 = Function(self.W)
+        self.u1, self.p1 = split(self.up1)
 
-        self.up.sub(0).rename("velocity")
-        self.up.sub(1).rename("pressure")
+        self.up1.sub(0).rename("velocity")
+        self.up1.sub(1).rename("pressure")
 
         v, q = TestFunctions(self.W)
 
@@ -69,7 +116,7 @@ class IncNavierStokes(object):
 
         # weak form
         F += (
-            + inner(dot(self.u0, nabla_grad(self.u1)), v) * dx
+            + inner(dot(self.u1, nabla_grad(self.u1)), v) * dx
             + self.nu * inner(grad(self.u1), grad(v)) * dx
             - (1.0 / self.rho) * self.p1 * div(v) * dx
             + div(self.u1) * q * dx
@@ -85,15 +132,16 @@ class IncNavierStokes(object):
             - self.forcing
         )
 
-        # GLS
-        # F += tau * inner(
-        #     + dot(self.u0, nabla_grad(v))
-        #     - self.nu * div(grad(v))
-        #     + (1.0 / self.rho) * grad(q), R) * dx
+        # SUPG
+        # F += inner(tau * dot(self.u0, nabla_grad(v)), R) * self.dx
 
-        self.problem = NonlinearVariationalProblem(F, self.up, self.bcs)
+        # PSPG
+        # F += inner(1.0 / self.rho * tau * nabla_grad(q), R) * dx
+
+        self.problem = NonlinearVariationalProblem(F, self.up1, self.bcs)
         self.solver = NonlinearVariationalSolver(
             self.problem,
+            options_prefix='incns',
             nullspace=nullspace,
             solver_parameters=self.solver_parameters)
 
@@ -110,5 +158,5 @@ class IncNavierStokes(object):
         if self.verbose:
             printp0("IncNavierStokes")
         self.solver.solve()
-        self.up0.assign(self.up)
-        return self.up.split()
+        self.up0.assign(self.up1)
+        return self.up1.split()

@@ -95,17 +95,17 @@ while t <= t_end:
         vp1 = u1.at(0.181, 7.37, tolerance=1e-8)[1]
         Nu0 = assemble(Constant(1.0 / H) * nusselt * ds(1))
 
-        cfl = project(sqrt(inner(u1, u1)) * model.dt / CellSize(mesh), DG0)
-        max_cfl = np.max(cfl.vector().array())
+        # cfl = project(sqrt(inner(u1, u1)) * model.dt / CellSize(mesh), DG0)
+        # max_cfl = np.max(cfl.vector().array())
            
-        print('CFL: {:+.5E}'.format(max_cfl))
+        # print('CFL: {:+.5E}'.format(max_cfl))
 
-        cfl_max = 1.0
-        delta_dt = 0.01
-        if max_cfl >= cfl_max or float(model.dt) > 0.1:
-            model.dt.assign(float(model.dt) - delta_dt)
-        else:
-            model.dt.assign(float(model.dt) + delta_dt)
+        # cfl_max = 1.0
+        # delta_dt = 0.01
+        # if max_cfl >= cfl_max or float(model.dt) > 0.1:
+        #     model.dt.assign(float(model.dt) - delta_dt)
+        # else:
+        #     model.dt.assign(float(model.dt) + delta_dt)
 
         if write_csv:
             csv_file.write('{:+.5E} {:+.5E} {:+.5E} {:+.5E} {:+.5E}\n'.format(t, Tp1, up1, vp1, Nu0))
